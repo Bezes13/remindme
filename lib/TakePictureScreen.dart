@@ -59,7 +59,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
               final image = await _controller.takePicture();
               widget.onPictureTaken(image.path, widget.title);
               if (!context.mounted) return;
-              Navigator.of(context).pop();
             } catch (e) {
               print(e);
             }

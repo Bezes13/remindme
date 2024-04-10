@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:remindme/TakePictureScreen.dart';
@@ -14,6 +15,7 @@ import 'my_app_state.dart';
 
 main() {
   runApp(MyApp());
+  // TODO saveEntries
 }
 
 class MyApp extends StatelessWidget {
@@ -21,6 +23,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
@@ -29,10 +32,36 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.pinkAccent),
         ),
-        home: _EntryListScreen(),
-      ),
+        home: MyHomePage()
+    ),
     );
+    }
+
+}
+
+
+class TakePictureInfo{
+  final CameraDescription camera;
+  final Function(String, String) onPictureTaken;
+  final String title;
+
+  TakePictureInfo(this.camera, this.onPictureTaken, this.title);
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    Widget page = _EntryListScreen();
+    if(appState.currentScreen == Screen.main && appState.picture != null){
+      page = TakePictureScreen(camera: appState.picture!.camera, title: appState.picture!.title, onPictureTaken: appState.picture!.onPictureTaken);
+    }
+    return page;
   }
+}
+
+enum Screen {
+  main, camera
 }
 
 class _EntryListScreen extends StatefulWidget {
@@ -117,7 +146,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   onTap: () {
-                    _showEntryDetails(filteredEntries[index]);
+                    _showEntryDetails(context, filteredEntries[index]);
                   },
                 ),
               );
@@ -148,14 +177,19 @@ class _EntryListScreenState extends State<_EntryListScreen> {
   }
 
   void safeImage(String imagePath, String title) {
+    Navigator.of(context).pop();
     setState(() {
-      entries.map((e) => {
-            if (e.title == title)
-              Entry(e.title, e.description, imagePath)
-            else
-              e
-          });
+      entries = entries.map((entry) {
+      if (entry.title == title) {
+        entry.images.add(imagePath);
+        return Entry(entry.title, entry.description, entry.images);
+      } else {
+        return entry;
+      }
+    }).toList();
+      filteredEntries = entries;
     });
+    _showEntryDetails(context, entries.firstWhere((element) => element.title == title));
   }
 
   void _takePicture(BuildContext context, String title) async {
@@ -167,24 +201,24 @@ class _EntryListScreenState extends State<_EntryListScreen> {
 
     // Get a specific camera from the list of available cameras.
     final firstCamera = cameras.first;
-
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Take Picture'),
-          content: TakePictureScreen(
-              camera: firstCamera, title: title, onPictureTaken: safeImage),
-          actions: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Ok'),
-            ),
-          ],
-        );
-      },
+    var appState = Provider.of<MyAppState>(context, listen: false);
+/*
+    setState(() {
+      appState.picture = TakePictureInfo(firstCamera, safeImage, title);
+      appState.currentScreen = Screen.camera;
+    });
+*/
+    Navigator.of(context).pop();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TakePictureScreen(
+          camera: firstCamera,
+          title: title,
+          onPictureTaken: safeImage
+          ,
+        ),
+      ),
     );
   }
 
@@ -220,11 +254,12 @@ class _EntryListScreenState extends State<_EntryListScreen> {
           onPressed: () async {
             if (newTitle != null && newDescription != null) {
               setState(() {
-                entries.add(Entry(newTitle!, newDescription!, ""));
+                entries.add(Entry(newTitle!, newDescription!, []));
                 filteredEntries = entries;
               });
               await _saveEntries();
             }
+            Navigator.of(context).pop();
           },
           child: Text('Add'),
         ),
@@ -238,7 +273,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     );
   }
 
-  void _showEntryDetails(Entry entry) {
+  void _showEntryDetails(BuildContext context, Entry entry) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -249,36 +284,46 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             textAlign: TextAlign.center,
             textWidthBasis: TextWidthBasis.parent,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Divider(
-                thickness: 1,
-              ),
-              Text(entry.description),
-              if (entry.image != "") Image.file(File(entry.image)),
-              ElevatedButton(
-                onPressed: () {
-                  _takePicture(context, entry.title);
-                },
-                child: Text('Take Picture'),
-              ),
-            ],
+          content: Container(
+            height: 200, // Set a height or remove this line if you want it to be unconstrained
+            width: double.maxFinite, // Ensure the content takes full width
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Divider(
+                  thickness: 1,
+                ),
+                Text(entry.description),
+                Expanded( // Use Expanded to allow ListView.builder to occupy remaining space
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: entry.images.length,
+                    itemBuilder: (BuildContext context, int index) => Card(
+                      child: Image.file(File(entry.images[index])),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: <Widget>[
-            ElevatedButton(
-              style: const ButtonStyle(
-                backgroundColor: MaterialStatePropertyAll<Color>(Colors.red),
-              ),
+            IconButton(
+              onPressed: () {
+                _takePicture(context, entry.title);
+              },
+              icon: Icon(Icons.camera_alt),
+            ),
+            IconButton(
               onPressed: () {
                 setState(() {
                   entries.remove(entry);
                   filteredEntries = entries;
                 });
-
                 Navigator.of(context).pop();
+
               },
-              child: Icon(Icons.delete),
+              icon: Icon(Icons.delete),
             ),
             ElevatedButton(
               onPressed: () {
@@ -288,6 +333,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             ),
           ],
         );
+
+
       },
     );
   }
