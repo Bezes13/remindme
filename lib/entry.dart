@@ -8,7 +8,7 @@ class Entry {
   Entry.fromJson(Map<String, dynamic> json)
       : title = json['title'] as String,
         description = json['description'] as String,
-        images = json['images'];
+        images = (json['images'] as List<dynamic>).map((e) => e.toString()).toList();
 
   Map<String, dynamic> toJson() =>
       {'title': title, 'description': description, 'images': images};

@@ -3,19 +3,17 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:remindme/TakePictureScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'entry.dart';
 import 'my_app_state.dart';
 
 main() {
   runApp(MyApp());
-  // TODO saveEntries
 }
 
 class MyApp extends StatelessWidget {
@@ -36,27 +34,12 @@ class MyApp extends StatelessWidget {
     ),
     );
     }
-
-}
-
-
-class TakePictureInfo{
-  final CameraDescription camera;
-  final Function(String, String) onPictureTaken;
-  final String title;
-
-  TakePictureInfo(this.camera, this.onPictureTaken, this.title);
 }
 
 class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    Widget page = _EntryListScreen();
-    if(appState.currentScreen == Screen.main && appState.picture != null){
-      page = TakePictureScreen(camera: appState.picture!.camera, title: appState.picture!.title, onPictureTaken: appState.picture!.onPictureTaken);
-    }
-    return page;
+    return _EntryListScreen();
   }
 }
 
@@ -72,6 +55,7 @@ class _EntryListScreen extends StatefulWidget {
 class _EntryListScreenState extends State<_EntryListScreen> {
   List<Entry> entries = [];
   List<Entry> filteredEntries = [];
+  final picker = ImagePicker();
 
   TextEditingController _searchController = TextEditingController();
 
@@ -96,9 +80,54 @@ class _EntryListScreenState extends State<_EntryListScreen> {
 
   Future<void> _saveEntries() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final List<String> entriesJson =
-        entries.map((entry) => jsonEncode(entry)).toList();
+    final List<String> entriesJson = entries.map((entry) => jsonEncode(entry)).toList();
     await prefs.setStringList('entries', entriesJson);
+  }
+
+  //Image Picker function to get image from gallery
+  Future getImageFromGallery(String title) async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      safeImage(pickedFile.path, title);
+    }
+  }
+
+  //Image Picker function to get image from camera
+  Future getImageFromCamera(String title) async {
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+
+    if (pickedFile != null) {
+      safeImage(pickedFile.path, title);
+    }
+  }
+
+  //Show options to get image from camera or gallery
+  Future showOptions(String title) async {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            child: Text('Photo Gallery'),
+            onPressed: () {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from gallery
+              getImageFromGallery(title);
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: Text('Camera'),
+            onPressed: () {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from camera
+              getImageFromCamera(title);
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -189,37 +218,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     }).toList();
       filteredEntries = entries;
     });
+    _saveEntries();
     _showEntryDetails(context, entries.firstWhere((element) => element.title == title));
-  }
-
-  void _takePicture(BuildContext context, String title) async {
-    // Navigator.of(context).pop();
-    WidgetsFlutterBinding.ensureInitialized();
-
-    // Obtain a list of the available cameras on the device.
-    final cameras = await availableCameras();
-
-    // Get a specific camera from the list of available cameras.
-    final firstCamera = cameras.first;
-    var appState = Provider.of<MyAppState>(context, listen: false);
-/*
-    setState(() {
-      appState.picture = TakePictureInfo(firstCamera, safeImage, title);
-      appState.currentScreen = Screen.camera;
-    });
-*/
-    Navigator.of(context).pop();
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TakePictureScreen(
-          camera: firstCamera,
-          title: title,
-          onPictureTaken: safeImage
-          ,
-        ),
-      ),
-    );
   }
 
   AlertDialog newEntryDialog(
@@ -257,7 +257,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 entries.add(Entry(newTitle!, newDescription!, []));
                 filteredEntries = entries;
               });
-              await _saveEntries();
+              _saveEntries();
             }
             Navigator.of(context).pop();
           },
@@ -272,6 +272,57 @@ class _EntryListScreenState extends State<_EntryListScreen> {
       ],
     );
   }
+  
+  void _showConfirmDialog(Entry entry, Widget content, Function confirmAction){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          actionsAlignment: MainAxisAlignment.center,
+          title: Text(
+            entry.title,
+            textAlign: TextAlign.center,
+            textWidthBasis: TextWidthBasis.parent,
+          ),
+          content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Divider(
+                  thickness: 1,
+                ),
+                content
+              ],
+            ),
+          
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                confirmAction(entry);
+                Navigator.of(context).pop();
+              },
+              child: Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void deleteEntry(Entry entry){
+    print("--------------");
+    setState(() {
+      entries.remove(entry);
+      filteredEntries = entries;
+    });
+    _saveEntries();
+    Navigator.of(context).pop();
+  }
 
   void _showEntryDetails(BuildContext context, Entry entry) {
     showDialog(
@@ -284,7 +335,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             textAlign: TextAlign.center,
             textWidthBasis: TextWidthBasis.parent,
           ),
-          content: Container(
+          content: SizedBox(
             height: 200, // Set a height or remove this line if you want it to be unconstrained
             width: double.maxFinite, // Ensure the content takes full width
             child: Column(
@@ -310,18 +361,14 @@ class _EntryListScreenState extends State<_EntryListScreen> {
           actions: <Widget>[
             IconButton(
               onPressed: () {
-                _takePicture(context, entry.title);
+                showOptions(entry.title);
+                //_takePicture(context, entry.title);
               },
               icon: Icon(Icons.camera_alt),
             ),
             IconButton(
               onPressed: () {
-                setState(() {
-                  entries.remove(entry);
-                  filteredEntries = entries;
-                });
-                Navigator.of(context).pop();
-
+                _showConfirmDialog(entry, Text("Do you want to delete the entry ${entry.title}?"), deleteEntry);
               },
               icon: Icon(Icons.delete),
             ),
@@ -333,8 +380,6 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             ),
           ],
         );
-
-
       },
     );
   }
