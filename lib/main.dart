@@ -226,7 +226,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                       hintText: 'Title',
                     ),
                   ),
-                  TextFormField(
+                  SizedBox(height: 10),
+                  TextField(
                     controller: TextEditingController(text: newDescription),
                     minLines: 5,
                     maxLines: 20,
@@ -234,7 +235,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                       newDescription = value;
                     },
                     decoration: InputDecoration(
-                      hintText: 'Description',
+                      border: OutlineInputBorder(),
+                      labelText: 'Description',
                     ),
                   ),
                   if (images.isNotEmpty)
@@ -382,13 +384,15 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Divider(
-                    thickness: 1,
-                  ),
-                  Text(entry.description, textAlign: TextAlign.start, textWidthBasis: TextWidthBasis.longestLine),
-                  Divider(
-                    thickness: 1,
-                  ),
+              TextField(
+                controller: TextEditingController(text: entry.description),
+                minLines: 5,
+                maxLines: 20,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Description',
+                ),
+              ),
                   if (entry.images.isNotEmpty)
                     SizedBox(
                       height: 200,
