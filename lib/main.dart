@@ -21,19 +21,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Remind Me',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.pinkAccent),
-        ),
-        home: MyHomePage()
-    ),
+          title: 'Remind Me',
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.pinkAccent),
+          ),
+          home: MyHomePage()),
     );
-    }
+  }
 }
 
 class MyHomePage extends StatelessWidget {
@@ -43,9 +41,7 @@ class MyHomePage extends StatelessWidget {
   }
 }
 
-enum Screen {
-  main, camera
-}
+enum Screen { main, camera }
 
 class _EntryListScreen extends StatefulWidget {
   @override
@@ -80,7 +76,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
 
   Future<void> _saveEntries() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final List<String> entriesJson = entries.map((entry) => jsonEncode(entry)).toList();
+    final List<String> entriesJson =
+        entries.map((entry) => jsonEncode(entry)).toList();
     await prefs.setStringList('entries', entriesJson);
   }
 
@@ -209,17 +206,18 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     Navigator.of(context).pop();
     setState(() {
       entries = entries.map((entry) {
-      if (entry.title == title) {
-        entry.images.add(imagePath);
-        return Entry(entry.title, entry.description, entry.images);
-      } else {
-        return entry;
-      }
-    }).toList();
+        if (entry.title == title) {
+          entry.images.add(imagePath);
+          return Entry(entry.title, entry.description, entry.images);
+        } else {
+          return entry;
+        }
+      }).toList();
       filteredEntries = entries;
     });
     _saveEntries();
-    _showEntryDetails(context, entries.firstWhere((element) => element.title == title));
+    _showEntryDetails(
+        context, entries.firstWhere((element) => element.title == title));
   }
 
   AlertDialog newEntryDialog(
@@ -272,8 +270,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
       ],
     );
   }
-  
-  void _showConfirmDialog(Entry entry, Widget content, Function confirmAction){
+
+  void _showConfirmDialog(Entry entry, Widget content, Function confirmAction) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -285,15 +283,14 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             textWidthBasis: TextWidthBasis.parent,
           ),
           content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Divider(
-                  thickness: 1,
-                ),
-                content
-              ],
-            ),
-          
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Divider(
+                thickness: 1,
+              ),
+              content
+            ],
+          ),
           actions: <Widget>[
             ElevatedButton(
               onPressed: () {
@@ -314,7 +311,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     );
   }
 
-  void deleteEntry(Entry entry){
+  void deleteEntry(Entry entry) {
     print("--------------");
     setState(() {
       entries.remove(entry);
@@ -336,8 +333,10 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             textWidthBasis: TextWidthBasis.parent,
           ),
           content: SizedBox(
-            height: 200, // Set a height or remove this line if you want it to be unconstrained
-            width: double.maxFinite, // Ensure the content takes full width
+            height: 200,
+            // Set a height or remove this line if you want it to be unconstrained
+            width: double.maxFinite,
+            // Ensure the content takes full width
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -345,7 +344,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                   thickness: 1,
                 ),
                 Text(entry.description),
-                Expanded( // Use Expanded to allow ListView.builder to occupy remaining space
+                Expanded(
+                  // Use Expanded to allow ListView.builder to occupy remaining space
                   child: ListView.builder(
                     shrinkWrap: true,
                     scrollDirection: Axis.horizontal,
@@ -368,7 +368,10 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             ),
             IconButton(
               onPressed: () {
-                _showConfirmDialog(entry, Text("Do you want to delete the entry ${entry.title}?"), deleteEntry);
+                _showConfirmDialog(
+                    entry,
+                    Text("Do you want to delete the entry ${entry.title}?"),
+                    deleteEntry);
               },
               icon: Icon(Icons.delete),
             ),
