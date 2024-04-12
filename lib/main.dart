@@ -237,6 +237,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                       hintText: 'Description',
                     ),
                   ),
+                  if (images.isNotEmpty)
                   SizedBox(
                     height: 200,
                     width: double.maxFinite,
@@ -361,12 +362,21 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Divider(
                     thickness: 1,
                   ),
-                  Text(entry.description),
+                  Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Text(entry.description, textAlign: TextAlign.start, textWidthBasis: TextWidthBasis.parent),
+                    ],
+                  ),
+                  Divider(
+                    thickness: 1,
+                  ),
+                  if (entry.images.isNotEmpty)
                   SizedBox(
                     height: 200,
                     width: double.maxFinite,
