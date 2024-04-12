@@ -20,27 +20,30 @@ class MyAppState extends ChangeNotifier {
       notifyListeners();
     }
   }
+
   Future<void> saveEntries() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final List<String> entriesJson =
-    entries.map((entry) => jsonEncode(entry)).toList();
+        entries.map((entry) => jsonEncode(entry)).toList();
     await prefs.setStringList('entries', entriesJson);
   }
 
   void filter(String filterText) {
     filteredEntries = entries
         .where((entry) =>
-        entry.title
-            .toLowerCase()
-            .contains(filterText.toLowerCase()))
+            entry.title.toLowerCase().contains(filterText.toLowerCase()))
         .toList();
     notifyListeners();
   }
 
-  void addNewEntry(String? newTitle, String? newDescription,
+  void addNewEntry(String? oldTitle, String? newTitle, String? newDescription,
       List<String> images) {
-    if (newTitle != null && newDescription != null) {
-      entries.add(Entry(newTitle, newDescription, images));
+    if (newTitle != null) {
+      if (oldTitle != null) {
+        entries.removeWhere((element) => oldTitle == element.title);
+      }
+
+      entries.add(Entry(newTitle, newDescription ?? "", images));
       filteredEntries = entries;
       saveEntries();
       notifyListeners();

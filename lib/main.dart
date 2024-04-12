@@ -80,67 +80,65 @@ class _EntryListScreenState extends State<_EntryListScreen> {
   Future showOptions(String title) async {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) =>
-          CupertinoActionSheet(
-            actions: [
-              CupertinoActionSheetAction(
-                child: Text('Photo Gallery'),
-                onPressed: () {
-                  // close the options modal
-                  Navigator.of(context).pop();
-                  // get image from gallery
-                  getImageFromGallery(title);
-                },
-              ),
-              CupertinoActionSheetAction(
-                child: Text('Camera'),
-                onPressed: () {
-                  // close the options modal
-                  Navigator.of(context).pop();
-                  // get image from camera
-                  getImageFromCamera(title);
-                },
-              ),
-            ],
+      builder: (context) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            child: Text('Photo Gallery'),
+            onPressed: () {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from gallery
+              getImageFromGallery(title);
+            },
           ),
+          CupertinoActionSheetAction(
+            child: Text('Camera'),
+            onPressed: () {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from camera
+              getImageFromCamera(title);
+            },
+          ),
+        ],
+      ),
     );
   }
 
   Future showOptionsOnCreate(Function(String) onImagePicked) async {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) =>
-          CupertinoActionSheet(
-            actions: [
-              CupertinoActionSheetAction(
-                child: Text('Photo Gallery'),
-                onPressed: () async {
-                  // close the options modal
-                  Navigator.of(context).pop();
-                  // get image from gallery
-                  final pickedFile =
+      builder: (context) => CupertinoActionSheet(
+        actions: [
+          CupertinoActionSheetAction(
+            child: Text('Photo Gallery'),
+            onPressed: () async {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from gallery
+              final pickedFile =
                   await picker.pickImage(source: ImageSource.gallery);
-                  if (pickedFile != null) {
-                    onImagePicked(pickedFile.path);
-                  }
-                },
-              ),
-              CupertinoActionSheetAction(
-                child: Text('Camera'),
-                onPressed: () async {
-                  // close the options modal
-                  Navigator.of(context).pop();
-                  // get image from camera
-                  final pickedFile =
+              if (pickedFile != null) {
+                onImagePicked(pickedFile.path);
+              }
+            },
+          ),
+          CupertinoActionSheetAction(
+            child: Text('Camera'),
+            onPressed: () async {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from camera
+              final pickedFile =
                   await picker.pickImage(source: ImageSource.camera);
 
-                  if (pickedFile != null) {
-                    onImagePicked(pickedFile.path);
-                  }
-                },
-              ),
-            ],
+              if (pickedFile != null) {
+                onImagePicked(pickedFile.path);
+              }
+            },
           ),
+        ],
+      ),
     );
   }
 
@@ -174,29 +172,28 @@ class _EntryListScreenState extends State<_EntryListScreen> {
           ),
           Expanded(
               child: ListView.builder(
-                itemCount: appState.filteredEntries.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(appState.filteredEntries[index].title,
-                          style: itemStyle),
-                      subtitle: Text(
-                        appState.filteredEntries[index].description,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () {
-                        _showEntryDetails(
-                            context, appState.filteredEntries[index]);
-                      },
-                    ),
-                  );
-                },
-              ))
+            itemCount: appState.filteredEntries.length,
+            itemBuilder: (context, index) {
+              return Card(
+                child: ListTile(
+                  title: Text(appState.filteredEntries[index].title,
+                      style: itemStyle),
+                  subtitle: Text(
+                    appState.filteredEntries[index].description,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onTap: () {
+                    _showEntryDetails(context, appState.filteredEntries[index]);
+                  },
+                ),
+              );
+            },
+          ))
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _addEntry(context);
+          _addEntry(context, [], "Add");
         },
         tooltip: 'Add Entry',
         child: Icon(Icons.add),
@@ -204,22 +201,24 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     );
   }
 
-  void _addEntry(BuildContext context) async {
+  void _addEntry(BuildContext context, List<String> images1, String confirmText,
+      [String? title, String? description]) async {
     var appState = Provider.of<MyAppState>(context, listen: false);
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        String? newTitle;
-        String? newDescription;
-        List<String> images = [];
+        String newTitle = title ?? "";
+        String newDescription = description ?? "";
+        List<String> images = images1;
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
-            title: Text('Add New Entry'),
+            title: Text(title == null ? 'Add New Entry' : "Edit $title"),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   TextField(
+                    controller: TextEditingController(text: newTitle),
                     onChanged: (value) {
                       newTitle = value;
                     },
@@ -228,6 +227,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                     ),
                   ),
                   TextFormField(
+                    controller: TextEditingController(text: newDescription),
                     minLines: 5,
                     maxLines: 20,
                     onChanged: (value) {
@@ -238,34 +238,48 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                     ),
                   ),
                   if (images.isNotEmpty)
-                  SizedBox(
-                    height: 200,
-                    width: double.maxFinite,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: images.length,
-                      itemBuilder: (BuildContext context, int index) =>
-                          Card(
-                            child: Stack(
-                              children: [
-                                Image.file(File(images[index])),
-                                IconButton(
-                                    onPressed: () => {},
-                                    icon: Icon(Icons.delete))
-                              ],
-                            ),
+                    SizedBox(
+                      height: 200,
+                      width: double.maxFinite,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: images.length,
+                        itemBuilder: (BuildContext context, int index) => Card(
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Image.file(File(images[index])),
+                              Positioned(
+                                top: -10,
+                                right: -10,
+                                child: IconButton(
+                                  onPressed: () {
+                                    _showConfirmDialog(
+                                        "Image",
+                                        Image.file(File(images[index])),
+                                        () => {
+                                              setState(() {
+                                                images.removeAt(index);
+                                              })
+                                            });
+                                  },
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                ),
+                              )
+                            ],
                           ),
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
             actions: <Widget>[
               IconButton(
                 onPressed: () {
-                  showOptionsOnCreate((p0) =>
-                      setState(() {
+                  showOptionsOnCreate((p0) => setState(() {
                         images.add(p0);
                       }));
                 },
@@ -273,10 +287,11 @@ class _EntryListScreenState extends State<_EntryListScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  appState.addNewEntry(newTitle, newDescription, images);
+                  appState.addNewEntry(title, newTitle, newDescription, images);
                   Navigator.of(context).pop();
+                  _showEntryDetails(context, appState.entries.firstWhere((element) => element.title == newTitle));
                 },
-                child: Text('Add'),
+                child: Text(confirmText),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -299,8 +314,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
         appState.entries.firstWhere((element) => element.title == title));
   }
 
-  void _showConfirmDialog(String title, Widget content,
-      Function confirmAction) {
+  void _showConfirmDialog(
+      String title, Widget content, Function confirmAction) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -346,18 +361,21 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     Navigator.of(context).pop();
   }
 
-
   void _showEntryDetails(BuildContext context, Entry entry) {
+    String newTitle = entry.title;
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
             actionsAlignment: MainAxisAlignment.center,
-            title: Text(
-              entry.title,
+            title: TextField(
+              readOnly: true,
+              controller: TextEditingController(text: newTitle),
+              onChanged: (value) {
+                newTitle = value;
+              },
               textAlign: TextAlign.center,
-              textWidthBasis: TextWidthBasis.parent,
             ),
             content: SingleChildScrollView(
               child: Column(
@@ -367,58 +385,60 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                   Divider(
                     thickness: 1,
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Text(entry.description, textAlign: TextAlign.start, textWidthBasis: TextWidthBasis.parent),
-                    ],
-                  ),
+                  Text(entry.description, textAlign: TextAlign.start, textWidthBasis: TextWidthBasis.longestLine),
                   Divider(
                     thickness: 1,
                   ),
                   if (entry.images.isNotEmpty)
-                  SizedBox(
-                    height: 200,
-                    width: double.maxFinite,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      scrollDirection: Axis.horizontal,
-                      itemCount: entry.images.length,
-                      itemBuilder: (BuildContext context, int index) =>
-                          Card(
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Image.file(File(entry.images[index])),
-                                Positioned(
-                                  top: -10,
-                                  right: -10,
-                                  child: IconButton(
-                                    onPressed: () {
-                                      _showConfirmDialog("Image", Image.file(
-                                          File(entry.images[index])), () =>
-                                      {
-                                        setState(() {
-                                          entry.images.removeAt(index);
-                                        }),
-                                        Provider.of<MyAppState>(
-                                            context, listen: false)
-                                            .saveEntries()
-                                      });
-                                    },
-                                    icon: const Icon(
-                                        Icons.delete, color: Colors.red),
-                                  ),
-                                )
-                              ],
-                            ),
+                    SizedBox(
+                      height: 200,
+                      width: double.maxFinite,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: entry.images.length,
+                        itemBuilder: (BuildContext context, int index) => Card(
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Image.file(File(entry.images[index])),
+                              Positioned(
+                                top: -10,
+                                right: -10,
+                                child: IconButton(
+                                  onPressed: () {
+                                    _showConfirmDialog(
+                                        "Image",
+                                        Image.file(File(entry.images[index])),
+                                        () => {
+                                              setState(() {
+                                                entry.images.removeAt(index);
+                                              }),
+                                              Provider.of<MyAppState>(context,
+                                                      listen: false)
+                                                  .saveEntries()
+                                            });
+                                  },
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                ),
+                              )
+                            ],
                           ),
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
             actions: <Widget>[
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _addEntry(context, entry.images, "Change", entry.title, entry.description);
+                },
+                icon: Icon(Icons.edit),
+              ),
               IconButton(
                 onPressed: () {
                   showOptions(entry.title);
@@ -442,8 +462,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
               ),
             ],
           );
-        }
-        );
+        });
       },
     );
   }
