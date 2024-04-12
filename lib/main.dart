@@ -1,12 +1,10 @@
-import 'dart:convert';
-
 import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'entry.dart';
@@ -49,8 +47,6 @@ class _EntryListScreen extends StatefulWidget {
 }
 
 class _EntryListScreenState extends State<_EntryListScreen> {
-  List<Entry> entries = [];
-  List<Entry> filteredEntries = [];
   final picker = ImagePicker();
 
   TextEditingController _searchController = TextEditingController();
@@ -58,27 +54,9 @@ class _EntryListScreenState extends State<_EntryListScreen> {
   @override
   void initState() {
     super.initState();
-    _loadEntries();
-  }
-
-  Future<void> _loadEntries() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final List<String>? entriesJson = prefs.getStringList('entries');
-    if (entriesJson != null) {
-      setState(() {
-        entries = entriesJson
-            .map((e) => Entry.fromJson((jsonDecode(e)) as Map<String, dynamic>))
-            .toList();
-        filteredEntries = entries;
-      });
-    }
-  }
-
-  Future<void> _saveEntries() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final List<String> entriesJson =
-        entries.map((entry) => jsonEncode(entry)).toList();
-    await prefs.setStringList('entries', entriesJson);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<MyAppState>(context, listen: false).loadEntries();
+    });
   }
 
   //Image Picker function to get image from gallery
@@ -102,28 +80,67 @@ class _EntryListScreenState extends State<_EntryListScreen> {
   Future showOptions(String title) async {
     showCupertinoModalPopup(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        actions: [
-          CupertinoActionSheetAction(
-            child: Text('Photo Gallery'),
-            onPressed: () {
-              // close the options modal
-              Navigator.of(context).pop();
-              // get image from gallery
-              getImageFromGallery(title);
-            },
+      builder: (context) =>
+          CupertinoActionSheet(
+            actions: [
+              CupertinoActionSheetAction(
+                child: Text('Photo Gallery'),
+                onPressed: () {
+                  // close the options modal
+                  Navigator.of(context).pop();
+                  // get image from gallery
+                  getImageFromGallery(title);
+                },
+              ),
+              CupertinoActionSheetAction(
+                child: Text('Camera'),
+                onPressed: () {
+                  // close the options modal
+                  Navigator.of(context).pop();
+                  // get image from camera
+                  getImageFromCamera(title);
+                },
+              ),
+            ],
           ),
-          CupertinoActionSheetAction(
-            child: Text('Camera'),
-            onPressed: () {
-              // close the options modal
-              Navigator.of(context).pop();
-              // get image from camera
-              getImageFromCamera(title);
-            },
+    );
+  }
+
+  Future showOptionsOnCreate(Function(String) onImagePicked) async {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) =>
+          CupertinoActionSheet(
+            actions: [
+              CupertinoActionSheetAction(
+                child: Text('Photo Gallery'),
+                onPressed: () async {
+                  // close the options modal
+                  Navigator.of(context).pop();
+                  // get image from gallery
+                  final pickedFile =
+                  await picker.pickImage(source: ImageSource.gallery);
+                  if (pickedFile != null) {
+                    onImagePicked(pickedFile.path);
+                  }
+                },
+              ),
+              CupertinoActionSheetAction(
+                child: Text('Camera'),
+                onPressed: () async {
+                  // close the options modal
+                  Navigator.of(context).pop();
+                  // get image from camera
+                  final pickedFile =
+                  await picker.pickImage(source: ImageSource.camera);
+
+                  if (pickedFile != null) {
+                    onImagePicked(pickedFile.path);
+                  }
+                },
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -132,6 +149,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     final theme = Theme.of(context);
     final style = theme.textTheme.displayLarge!;
     final itemStyle = theme.textTheme.displayMedium!;
+    var appState = Provider.of<MyAppState>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Remind me', style: style),
@@ -147,13 +165,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             child: TextField(
                 controller: _searchController,
                 onChanged: (value) {
-                  setState(() {
-                    filteredEntries = entries
-                        .where((entry) => entry.title
-                            .toLowerCase()
-                            .contains(value.toLowerCase()))
-                        .toList();
-                  });
+                  appState.filter(value);
                 },
                 decoration: InputDecoration(
                   hintText: 'Search...',
@@ -162,22 +174,24 @@ class _EntryListScreenState extends State<_EntryListScreen> {
           ),
           Expanded(
               child: ListView.builder(
-            itemCount: filteredEntries.length,
-            itemBuilder: (context, index) {
-              return Card(
-                child: ListTile(
-                  title: Text(filteredEntries[index].title, style: itemStyle),
-                  subtitle: Text(
-                    filteredEntries[index].description,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  onTap: () {
-                    _showEntryDetails(context, filteredEntries[index]);
-                  },
-                ),
-              );
-            },
-          ))
+                itemCount: appState.filteredEntries.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    child: ListTile(
+                      title: Text(appState.filteredEntries[index].title,
+                          style: itemStyle),
+                      subtitle: Text(
+                        appState.filteredEntries[index].description,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () {
+                        _showEntryDetails(
+                            context, appState.filteredEntries[index]);
+                      },
+                    ),
+                  );
+                },
+              ))
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -191,94 +205,108 @@ class _EntryListScreenState extends State<_EntryListScreen> {
   }
 
   void _addEntry(BuildContext context) async {
-    String? newTitle;
-    String? newDescription;
-
+    var appState = Provider.of<MyAppState>(context, listen: false);
     await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return newEntryDialog(newTitle, newDescription, context);
+        String? newTitle;
+        String? newDescription;
+        List<String> images = [];
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            title: Text('Add New Entry'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    onChanged: (value) {
+                      newTitle = value;
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Title',
+                    ),
+                  ),
+                  TextFormField(
+                    minLines: 5,
+                    maxLines: 20,
+                    onChanged: (value) {
+                      newDescription = value;
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Description',
+                    ),
+                  ),
+                  SizedBox(
+                    height: 200,
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: images.length,
+                      itemBuilder: (BuildContext context, int index) =>
+                          Card(
+                            child: Stack(
+                              children: [
+                                Image.file(File(images[index])),
+                                IconButton(
+                                    onPressed: () => {},
+                                    icon: Icon(Icons.delete))
+                              ],
+                            ),
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              IconButton(
+                onPressed: () {
+                  showOptionsOnCreate((p0) =>
+                      setState(() {
+                        images.add(p0);
+                      }));
+                },
+                icon: Icon(Icons.camera_alt),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  appState.addNewEntry(newTitle, newDescription, images);
+                  Navigator.of(context).pop();
+                },
+                child: Text('Add'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Cancel'),
+              ),
+            ],
+          );
+        });
       },
     );
   }
 
   void safeImage(String imagePath, String title) {
+    var appState = Provider.of<MyAppState>(context, listen: false);
     Navigator.of(context).pop();
-    setState(() {
-      entries = entries.map((entry) {
-        if (entry.title == title) {
-          entry.images.add(imagePath);
-          return Entry(entry.title, entry.description, entry.images);
-        } else {
-          return entry;
-        }
-      }).toList();
-      filteredEntries = entries;
-    });
-    _saveEntries();
-    _showEntryDetails(
-        context, entries.firstWhere((element) => element.title == title));
+    appState.safeImage(imagePath, title);
+    _showEntryDetails(context,
+        appState.entries.firstWhere((element) => element.title == title));
   }
 
-  AlertDialog newEntryDialog(
-      String? newTitle, String? newDescription, BuildContext context) {
-    return AlertDialog(
-      title: Text('Add New Entry'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          TextField(
-            onChanged: (value) {
-              newTitle = value;
-            },
-            decoration: InputDecoration(
-              hintText: 'Title',
-            ),
-          ),
-          TextFormField(
-            minLines: 5,
-            maxLines: 20,
-            onChanged: (value) {
-              newDescription = value;
-            },
-            decoration: InputDecoration(
-              hintText: 'Description',
-            ),
-          ),
-        ],
-      ),
-      actions: <Widget>[
-        ElevatedButton(
-          onPressed: () async {
-            if (newTitle != null && newDescription != null) {
-              setState(() {
-                entries.add(Entry(newTitle!, newDescription!, []));
-                filteredEntries = entries;
-              });
-              _saveEntries();
-            }
-            Navigator.of(context).pop();
-          },
-          child: Text('Add'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('Cancel'),
-        ),
-      ],
-    );
-  }
-
-  void _showConfirmDialog(Entry entry, Widget content, Function confirmAction) {
+  void _showConfirmDialog(String title, Widget content,
+      Function confirmAction) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           actionsAlignment: MainAxisAlignment.center,
           title: Text(
-            entry.title,
+            "Remove $title",
             textAlign: TextAlign.center,
             textWidthBasis: TextWidthBasis.parent,
           ),
@@ -300,7 +328,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                confirmAction(entry);
+                confirmAction();
                 Navigator.of(context).pop();
               },
               child: Text('Confirm'),
@@ -312,76 +340,99 @@ class _EntryListScreenState extends State<_EntryListScreen> {
   }
 
   void deleteEntry(Entry entry) {
-    print("--------------");
-    setState(() {
-      entries.remove(entry);
-      filteredEntries = entries;
-    });
-    _saveEntries();
+    var appState = Provider.of<MyAppState>(context, listen: false);
+    appState.deleteEntry(entry);
     Navigator.of(context).pop();
   }
+
 
   void _showEntryDetails(BuildContext context, Entry entry) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          actionsAlignment: MainAxisAlignment.center,
-          title: Text(
-            entry.title,
-            textAlign: TextAlign.center,
-            textWidthBasis: TextWidthBasis.parent,
-          ),
-          content: SizedBox(
-            height: 200,
-            // Set a height or remove this line if you want it to be unconstrained
-            width: double.maxFinite,
-            // Ensure the content takes full width
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Divider(
-                  thickness: 1,
-                ),
-                Text(entry.description),
-                Expanded(
-                  // Use Expanded to allow ListView.builder to occupy remaining space
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    itemCount: entry.images.length,
-                    itemBuilder: (BuildContext context, int index) => Card(
-                      child: Image.file(File(entry.images[index])),
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            actionsAlignment: MainAxisAlignment.center,
+            title: Text(
+              entry.title,
+              textAlign: TextAlign.center,
+              textWidthBasis: TextWidthBasis.parent,
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Divider(
+                    thickness: 1,
+                  ),
+                  Text(entry.description),
+                  SizedBox(
+                    height: 200,
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: entry.images.length,
+                      itemBuilder: (BuildContext context, int index) =>
+                          Card(
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Image.file(File(entry.images[index])),
+                                Positioned(
+                                  top: -10,
+                                  right: -10,
+                                  child: IconButton(
+                                    onPressed: () {
+                                      _showConfirmDialog("Image", Image.file(
+                                          File(entry.images[index])), () =>
+                                      {
+                                        setState(() {
+                                          entry.images.removeAt(index);
+                                        }),
+                                        Provider.of<MyAppState>(
+                                            context, listen: false)
+                                            .saveEntries()
+                                      });
+                                    },
+                                    icon: const Icon(
+                                        Icons.delete, color: Colors.red),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          actions: <Widget>[
-            IconButton(
-              onPressed: () {
-                showOptions(entry.title);
-                //_takePicture(context, entry.title);
-              },
-              icon: Icon(Icons.camera_alt),
-            ),
-            IconButton(
-              onPressed: () {
-                _showConfirmDialog(
-                    entry,
-                    Text("Do you want to delete the entry ${entry.title}?"),
-                    deleteEntry);
-              },
-              icon: Icon(Icons.delete),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Close'),
-            ),
-          ],
+            actions: <Widget>[
+              IconButton(
+                onPressed: () {
+                  showOptions(entry.title);
+                },
+                icon: Icon(Icons.camera_alt),
+              ),
+              IconButton(
+                onPressed: () {
+                  _showConfirmDialog(
+                      entry.title,
+                      Text("Do you want to delete the entry ${entry.title}?"),
+                      () => deleteEntry(entry));
+                },
+                icon: Icon(Icons.delete),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Close'),
+              ),
+            ],
+          );
+        }
         );
       },
     );
