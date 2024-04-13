@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -13,7 +12,9 @@ import 'my_app_state.dart';
 main() {
   runApp(MyApp());
 }
-
+// TODO center images when lenght = 1
+// TODO seperate widgets
+// TODO bild größer anzeigen mit Lupe
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -187,7 +188,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                   },
                 ),
               );
-            },
+            }
           ))
         ],
       ),
@@ -285,21 +286,24 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                         images.add(p0);
                       }));
                 },
-                icon: Icon(Icons.camera_alt),
+                icon: Icon(Icons.add_a_photo),
               ),
-              ElevatedButton(
+              IconButton(
                 onPressed: () async {
                   appState.addNewEntry(title, newTitle, newDescription, images);
                   Navigator.of(context).pop();
-                  _showEntryDetails(context, appState.entries.firstWhere((element) => element.title == newTitle));
+                  _showEntryDetails(
+                      context,
+                      appState.entries
+                          .firstWhere((element) => element.title == newTitle));
                 },
-                child: Text(confirmText),
+                icon: Icon(Icons.add),
               ),
-              ElevatedButton(
+              IconButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('Cancel'),
+                icon: Icon(Icons.close),
               ),
             ],
           );
@@ -384,16 +388,47 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-              TextField(
-                controller: TextEditingController(text: entry.description),
-                minLines: 5,
-                maxLines: 20,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Description',
-                ),
-              ),
-                  if (entry.images.isNotEmpty)
+                  TextField(
+                    controller: TextEditingController(text: entry.description),
+                    minLines: 5,
+                    maxLines: 20,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Description',
+                    ),
+                  ),
+                  if (entry.images.isNotEmpty && entry.images.length == 1)
+                    SizedBox(
+                      height: 200,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Image.file(File(entry.images[0])),
+                          Positioned(
+                            top: -10,
+                            right: -10,
+                            child: IconButton(
+                              onPressed: () {
+                                _showConfirmDialog(
+                                    "Image",
+                                    Image.file(File(entry.images[0])),
+                                        () => {
+                                      setState(() {
+                                        entry.images.removeAt(0);
+                                      }),
+                                      Provider.of<MyAppState>(context,
+                                          listen: false)
+                                          .saveEntries()
+                                    });
+                              },
+                              icon: const Icon(Icons.delete,
+                                  color: Colors.red),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  if (entry.images.isNotEmpty && entry.images.length != 1)
                     SizedBox(
                       height: 200,
                       width: double.maxFinite,
@@ -431,7 +466,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                           ),
                         ),
                       ),
-                    ),
+                    )
                 ],
               ),
             ),
@@ -439,7 +474,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
               IconButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  _addEntry(context, entry.images, "Change", entry.title, entry.description);
+                  _addEntry(context, entry.images, "Change", entry.title,
+                      entry.description);
                 },
                 icon: Icon(Icons.edit),
               ),
@@ -447,7 +483,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 onPressed: () {
                   showOptions(entry.title);
                 },
-                icon: Icon(Icons.camera_alt),
+                icon: Icon(Icons.add_a_photo),
               ),
               IconButton(
                 onPressed: () {
@@ -458,11 +494,11 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 },
                 icon: Icon(Icons.delete),
               ),
-              ElevatedButton(
+              IconButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('Close'),
+                icon: Icon(Icons.close),
               ),
             ],
           );
