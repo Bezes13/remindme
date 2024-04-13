@@ -12,9 +12,8 @@ import 'my_app_state.dart';
 main() {
   runApp(MyApp());
 }
-// TODO center images when lenght = 1
 // TODO seperate widgets
-// TODO bild größer anzeigen mit Lupe
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -361,6 +360,20 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     );
   }
 
+  void _showImageDialog(String imagePath) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          actionsAlignment: MainAxisAlignment.center,
+          content:
+              IconButton(onPressed: () => {Navigator.of(context).pop()},
+              icon: Image.file(File(imagePath))),
+        );
+      },
+    );
+  }
+
   void deleteEntry(Entry entry) {
     var appState = Provider.of<MyAppState>(context, listen: false);
     appState.deleteEntry(entry);
@@ -460,6 +473,17 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                                   },
                                   icon: const Icon(Icons.delete,
                                       color: Colors.red),
+                                ),
+                              ),
+                              Positioned(
+                                top: -10,
+                                left: -10,
+                                child: IconButton(
+                                  onPressed: () {
+                                    _showImageDialog(entry.images[index]);
+                                  },
+                                  icon: const Icon(Icons.zoom_in,
+                                      color: Colors.white),
                                 ),
                               )
                             ],
