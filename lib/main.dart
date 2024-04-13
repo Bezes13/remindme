@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:remindme/ConfirmDialog.dart';
+import 'package:remindme/EntryImage.dart';
 
 import 'entry.dart';
 import 'my_app_state.dart';
@@ -172,23 +173,23 @@ class _EntryListScreenState extends State<_EntryListScreen> {
           ),
           Expanded(
               child: ListView.builder(
-            itemCount: appState.filteredEntries.length,
-            itemBuilder: (context, index) {
-              return Card(
-                child: ListTile(
-                  title: Text(appState.filteredEntries[index].title,
-                      style: itemStyle),
-                  subtitle: Text(
-                    appState.filteredEntries[index].description,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  onTap: () {
-                    _showEntryDetails(context, appState.filteredEntries[index]);
-                  },
-                ),
-              );
-            }
-          ))
+                  itemCount: appState.filteredEntries.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      child: ListTile(
+                        title: Text(appState.filteredEntries[index].title,
+                            style: itemStyle),
+                        subtitle: Text(
+                          appState.filteredEntries[index].description,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () {
+                          _showEntryDetails(
+                              context, appState.filteredEntries[index]);
+                        },
+                      ),
+                    );
+                  }))
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -248,30 +249,15 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                         scrollDirection: Axis.horizontal,
                         itemCount: images.length,
                         itemBuilder: (BuildContext context, int index) => Card(
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Image.file(File(images[index])),
-                              Positioned(
-                                top: -10,
-                                right: -10,
-                                child: IconButton(
-                                  onPressed: () {
-                                    _showConfirmDialog(
-                                        "Image",
-                                        Image.file(File(images[index])),
-                                        () => {
-                                              setState(() {
-                                                images.removeAt(index);
-                                              })
-                                            });
-                                  },
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
-                                ),
-                              )
-                            ],
-                          ),
+                          child:
+                          EntryImage(
+                              image: images[index],
+                              onDelete: () => {
+                                setState(() {
+                                  images.removeAt(index);
+                                })
+                              },
+                              confirmDialog: _showConfirmDialog)
                         ),
                       ),
                     ),
@@ -324,52 +310,8 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          actionsAlignment: MainAxisAlignment.center,
-          title: Text(
-            "Remove $title",
-            textAlign: TextAlign.center,
-            textWidthBasis: TextWidthBasis.parent,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Divider(
-                thickness: 1,
-              ),
-              content
-            ],
-          ),
-          actions: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                confirmAction();
-                Navigator.of(context).pop();
-              },
-              child: Text('Confirm'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showImageDialog(String imagePath) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          actionsAlignment: MainAxisAlignment.center,
-          content:
-              IconButton(onPressed: () => {Navigator.of(context).pop()},
-              icon: Image.file(File(imagePath))),
-        );
+        return ConfirmDialog(
+            title: title, content: content, confirmAction: confirmAction);
       },
     );
   }
@@ -413,33 +355,17 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                   if (entry.images.isNotEmpty && entry.images.length == 1)
                     SizedBox(
                       height: 200,
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Image.file(File(entry.images[0])),
-                          Positioned(
-                            top: -10,
-                            right: -10,
-                            child: IconButton(
-                              onPressed: () {
-                                _showConfirmDialog(
-                                    "Image",
-                                    Image.file(File(entry.images[0])),
-                                        () => {
-                                      setState(() {
-                                        entry.images.removeAt(0);
-                                      }),
-                                      Provider.of<MyAppState>(context,
-                                          listen: false)
-                                          .saveEntries()
-                                    });
-                              },
-                              icon: const Icon(Icons.delete,
-                                  color: Colors.red),
-                            ),
-                          )
-                        ],
-                      ),
+                      child: EntryImage(
+                          image: entry.images[0],
+                          onDelete: () => {
+                            setState(() {
+                              entry.images.removeAt(0);
+                            }),
+                            Provider.of<MyAppState>(context,
+                                listen: false)
+                                .saveEntries()
+                          },
+                          confirmDialog: _showConfirmDialog)
                     ),
                   if (entry.images.isNotEmpty && entry.images.length != 1)
                     SizedBox(
@@ -450,45 +376,17 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                         scrollDirection: Axis.horizontal,
                         itemCount: entry.images.length,
                         itemBuilder: (BuildContext context, int index) => Card(
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Image.file(File(entry.images[index])),
-                              Positioned(
-                                top: -10,
-                                right: -10,
-                                child: IconButton(
-                                  onPressed: () {
-                                    _showConfirmDialog(
-                                        "Image",
-                                        Image.file(File(entry.images[index])),
-                                        () => {
-                                              setState(() {
-                                                entry.images.removeAt(index);
-                                              }),
-                                              Provider.of<MyAppState>(context,
-                                                      listen: false)
-                                                  .saveEntries()
-                                            });
-                                  },
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.red),
-                                ),
-                              ),
-                              Positioned(
-                                top: -10,
-                                left: -10,
-                                child: IconButton(
-                                  onPressed: () {
-                                    _showImageDialog(entry.images[index]);
-                                  },
-                                  icon: const Icon(Icons.zoom_in,
-                                      color: Colors.white),
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
+                            child: EntryImage(
+                                image: entry.images[index],
+                                onDelete: () => {
+                                      setState(() {
+                                        entry.images.removeAt(index);
+                                      }),
+                                      Provider.of<MyAppState>(context,
+                                              listen: false)
+                                          .saveEntries()
+                                    },
+                                confirmDialog: _showConfirmDialog)),
                       ),
                     )
                 ],
