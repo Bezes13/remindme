@@ -116,4 +116,16 @@ class MyAppState extends ChangeNotifier {
     filterWithTag();
     notifyListeners();
   }
+
+  void removeTag(String tag) {
+    allTags.remove(tag);
+    entries.map((entry) {
+      if (entry.tag == tag) {
+        return Entry(entry.title, entry.description, entry.images, "");
+      } else {
+        return entry;
+      }
+    }).toList();
+    notifyListeners();
+  }
 }

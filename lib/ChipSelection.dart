@@ -83,13 +83,34 @@ class _ChipSelectionState extends State<ChipSelection> {
                               title: Text(
                                 "Add new Tag",
                               ),
-                              content: TextField(
-                                  onChanged: (value) {
-                                    tag = value;
-                                  },
-                                  decoration: InputDecoration(
-                                    hintText: 'Tag Name',
-                                  )),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Wrap(
+                                  spacing: 0.0,
+                                  children: appState.allTags
+                                      .map((String tag) {
+                                    return FilterChip(
+                                      avatar: Icon(Icons.delete),
+                                      label: Text(tag),
+                                      selected: false,
+                                      onSelected: (bool selected) {
+                                        setState(() {
+                                          appState.removeTag(tag);
+                                        });
+                                        Navigator.of(context).pop();
+                                      },
+                                    );
+                                  }).toList()),
+                                  TextField(
+                                      onChanged: (value) {
+                                        tag = value;
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: 'Tag Name',
+                                      )),
+                                ],
+                              ),
                               actions: <Widget>[
                                 ElevatedButton(
                                   onPressed: () {
