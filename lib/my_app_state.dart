@@ -9,7 +9,7 @@ class MyAppState extends ChangeNotifier {
   List<Entry> entries = [];
   List<Entry> filteredEntries = [];
   List<String> allTags = ["Minigolf", "Food", "Restaurant", "Vacation"];
-
+  String tag = "";
   Future<void> loadEntries() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final List<String>? entriesJson = prefs.getStringList('entries');
@@ -32,7 +32,12 @@ class MyAppState extends ChangeNotifier {
   }
 
   void filter(String filterText) {
-    filteredEntries = entries
+    if(tag == ""){
+      filteredEntries = entries;
+    }else{
+      filteredEntries = entries.where((element) => (element.tag == tag) || element.tag == "" && tag == "Unassigned").toList();
+    }
+    filteredEntries = filteredEntries
         .where((entry) =>
             entry.title.toLowerCase().contains(filterText.toLowerCase()))
         .toList();
@@ -48,7 +53,7 @@ class MyAppState extends ChangeNotifier {
 
       entries.add(Entry(newTitle, newDescription ?? "", images, tag));
       entries.sort((a, b) => a.title.compareTo(b.title));
-      filteredEntries = entries;
+      filterWithTag();
       saveEntries();
       notifyListeners();
     }
@@ -63,7 +68,7 @@ class MyAppState extends ChangeNotifier {
         return entry;
       }
     }).toList();
-    filteredEntries = entries;
+    filterWithTag();
 
     saveEntries();
     notifyListeners();
@@ -77,7 +82,7 @@ class MyAppState extends ChangeNotifier {
         return entry;
       }
     }).toList();
-    filteredEntries = entries;
+    filterWithTag();
 
     saveEntries();
     notifyListeners();
@@ -93,13 +98,22 @@ class MyAppState extends ChangeNotifier {
 
   void deleteEntry(Entry entry) {
     entries.remove(entry);
-    filteredEntries = entries;
+    filterWithTag();
     saveEntries();
     notifyListeners();
   }
 
+  void filterWithTag(){
+    if(tag == ""){
+      filteredEntries = entries;
+    }else{
+      filteredEntries = entries.where((element) => (element.tag == tag) || element.tag == "" && tag == "Unassigned").toList();
+    }
+  }
+
   void filterByTag(String tag){
-    filteredEntries = entries.where((element) => element.tag == tag).toList();
+    this.tag = tag;
+    filterWithTag();
     notifyListeners();
   }
 }

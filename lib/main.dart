@@ -50,7 +50,6 @@ class _EntryListScreen extends StatefulWidget {
 
 class _EntryListScreenState extends State<_EntryListScreen> {
   final picker = ImagePicker();
-
   TextEditingController _searchController = TextEditingController();
 
   @override
@@ -150,6 +149,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     final style = theme.textTheme.displayLarge!;
     final itemStyle = theme.textTheme.displayMedium!;
     var appState = Provider.of<MyAppState>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Remind me', style: style),
@@ -172,7 +172,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                   border: UnderlineInputBorder(),
                 )),
           ),
-          ChipSelection(currentTag: "", onSelected: appState.filterByTag ),
+          ChipSelection(currentTag: "", onSelected: appState.filterByTag, addUnassigned: true ),
           Expanded(
               child: ListView.builder(
                   itemCount: appState.filteredEntries.length,
@@ -205,7 +205,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
   }
 
   void _addEntry(BuildContext context, List<String> images1, String confirmText,
-      [String? title, String? description]) async {
+      [String? title, String? description, String? oldTag]) async {
     var appState = Provider.of<MyAppState>(context, listen: false);
     await showDialog(
       context: context,
@@ -213,7 +213,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
         String newTitle = title ?? "";
         String newDescription = description ?? "";
         List<String> images = images1;
-        String tag = "";
+        String tag = oldTag??"";
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
             title: Text(title == null ? 'Add New Entry' : "Edit $title"),
@@ -231,7 +231,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  ChipSelection(currentTag: tag, onSelected: (selectedTag)=> tag = selectedTag),
+                  ChipSelection(currentTag: tag, onSelected: (selectedTag)=> tag = selectedTag, addUnassigned: false),
                   TextField(
                     controller: TextEditingController(text: newDescription),
                     minLines: 5,
@@ -348,7 +348,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  ChipSelection(currentTag: entry.tag, onSelected: (tag)=>{appState.addTag(tag, entry.title)}),
+                  ChipSelection(currentTag: entry.tag, onSelected: (tag)=>{appState.addTag(tag, entry.title)}, addUnassigned: false),
                   TextField(
                     controller: TextEditingController(text: entry.description),
                     readOnly: true,
@@ -404,7 +404,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 onPressed: () {
                   Navigator.of(context).pop();
                   _addEntry(context, entry.images, "Change", entry.title,
-                      entry.description);
+                      entry.description, entry.tag);
                 },
                 icon: Icon(Icons.edit),
               ),
