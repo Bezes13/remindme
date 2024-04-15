@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:remindme/ChipSelection.dart';
 import 'package:remindme/ConfirmDialog.dart';
 import 'package:remindme/EntryImage.dart';
 
@@ -13,7 +14,7 @@ import 'my_app_state.dart';
 main() {
   runApp(MyApp());
 }
-// TODO seperate widgets
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -171,6 +172,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                   border: UnderlineInputBorder(),
                 )),
           ),
+          ChipSelection(currentTag: "", onSelected: appState.filterByTag ),
           Expanded(
               child: ListView.builder(
                   itemCount: appState.filteredEntries.length,
@@ -211,6 +213,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
         String newTitle = title ?? "";
         String newDescription = description ?? "";
         List<String> images = images1;
+        String tag = "";
         return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
             title: Text(title == null ? 'Add New Entry' : "Edit $title"),
@@ -228,6 +231,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                     ),
                   ),
                   SizedBox(height: 10),
+                  ChipSelection(currentTag: tag, onSelected: (selectedTag)=> tag = selectedTag),
                   TextField(
                     controller: TextEditingController(text: newDescription),
                     minLines: 5,
@@ -275,7 +279,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
               ),
               IconButton(
                 onPressed: () async {
-                  appState.addNewEntry(title, newTitle, newDescription, images);
+                  appState.addNewEntry(title, newTitle, newDescription, images, tag);
                   Navigator.of(context).pop();
                   _showEntryDetails(
                       context,
@@ -324,6 +328,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
 
   void _showEntryDetails(BuildContext context, Entry entry) {
     String newTitle = entry.title;
+    var appState = Provider.of<MyAppState>(context, listen: false);
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -343,8 +348,10 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  ChipSelection(currentTag: entry.tag, onSelected: (tag)=>{appState.addTag(tag, entry.title)}),
                   TextField(
                     controller: TextEditingController(text: entry.description),
+                    readOnly: true,
                     minLines: 5,
                     maxLines: 20,
                     decoration: InputDecoration(
