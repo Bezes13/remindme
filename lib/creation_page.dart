@@ -76,6 +76,8 @@ class _CreationPageState extends State<CreationPage> {
     List<String> images = args.images;
     String tag = args.tag;
     bool isNew = args.title == "";
+    final theme = Theme.of(context);
+    final itemStyle = theme.textTheme.displayMedium!;
 
     return Scaffold(
       appBar: AppBar(title: Text(isNew ? 'Add New Entry' : args.title)),
@@ -152,20 +154,26 @@ class _CreationPageState extends State<CreationPage> {
         ),
       ),
       persistentFooterButtons: <Widget>[
-        if (isNew)
+        if (!isNew)
+
+
           IconButton(
             onPressed: () async {
-              appState.addNewEntry(
-                  args.title, newTitle, newDescription, images, tag);
-              Navigator.pushNamed(context, "/");
-            },
-            icon: Icon(Icons.add),
-          )
-        else
-          IconButton(
-            onPressed: () async {
-              appState.deleteEntry(args);
-              Navigator.pushNamed(context, "/");
+              _showConfirmDialog(args.title, Card(
+                child: ListTile(
+                  title: Text(
+                    args.title,
+                    style: itemStyle,
+                  ),
+                  subtitle: Text(
+                    args.description,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ), ()=>{
+              appState.deleteEntry(args),
+              Navigator.pushNamed(context, "/")
+              });
             },
             icon: Icon(Icons.delete),
           ),
@@ -176,14 +184,16 @@ class _CreationPageState extends State<CreationPage> {
                 }));
           },
           icon: Icon(Icons.add_a_photo),
-        ),
-        IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: Icon(Icons.close),
-        ),
+        )
       ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, "/another", arguments: Entry("", "", [], ""));
+        },
+        tooltip: 'Add Entry',
+        child: Icon(Icons.check),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endContained,
       persistentFooterAlignment: AlignmentDirectional.center,
     );
   }

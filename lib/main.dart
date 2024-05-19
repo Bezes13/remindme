@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -72,46 +73,59 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     var appState = Provider.of<MyAppState>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Remind me', style: style),
-      ),
-      body: Column(
-        children: [
-          Divider(
-            color: Colors.black,
-            thickness: 1,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(floating: true, title: Text("Remy", style: style,)),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      appState.filter(value);
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      border: UnderlineInputBorder(),
+                    ),
+                  ),
+                ),
+                ChipSelection(
+                  currentTag: "",
+                  onSelected: appState.filterByTag,
+                  addUnassigned: true,
+                ),
+              ],
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-                controller: _searchController,
-                onChanged: (value) {
-                  appState.filter(value);
-                },
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  border: UnderlineInputBorder(),
-                )),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                return Card(
+                  child: ListTile(
+                    title: Text(
+                      appState.filteredEntries[index].title,
+                      style: itemStyle,
+                    ),
+                    subtitle: Text(
+                      appState.filteredEntries[index].description,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        "/another",
+                        arguments: appState.filteredEntries[index],
+                      );
+                    },
+                  ),
+                );
+              },
+              childCount: appState.filteredEntries.length,
+            ),
           ),
-          ChipSelection(currentTag: "", onSelected: appState.filterByTag, addUnassigned: true ),
-          Expanded(
-              child: ListView.builder(
-                  itemCount: appState.filteredEntries.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      child: ListTile(
-                        title: Text(appState.filteredEntries[index].title,
-                            style: itemStyle),
-                        subtitle: Text(
-                          appState.filteredEntries[index].description,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onTap: () {
-                          Navigator.pushNamed(context, "/another", arguments: appState.filteredEntries[index]);
-                        },
-                      ),
-                    );
-                  }))
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -123,5 +137,6 @@ class _EntryListScreenState extends State<_EntryListScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
+
   }
 }
