@@ -8,7 +8,7 @@ import 'entry.dart';
 class MyAppState extends ChangeNotifier {
   List<Entry> entries = [];
   List<Entry> filteredEntries = [];
-  List<String> allTags = ["Minigolf", "Food", "Restaurant", "Vacation"];
+  List<String> allTags = ["Minigolf", "Food", "Restaurant", "Vacation","BucketList"];
   String tag = "";
   Future<void> loadEntries() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

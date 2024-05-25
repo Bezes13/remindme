@@ -32,7 +32,7 @@ class _ChipSelectionState extends State<ChipSelection> {
     var appState = Provider.of<MyAppState>(context);
     if (selectedTag == "") {
       return Wrap(
-        spacing: 0.0,
+        spacing: 3.0,
         children: appState.allTags
             .map((String tag) {
               return FilterChip(

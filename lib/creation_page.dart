@@ -80,78 +80,94 @@ class _CreationPageState extends State<CreationPage> {
     final itemStyle = theme.textTheme.displayMedium!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(isNew ? 'Add New Entry' : args.title)),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: TextEditingController(text: newTitle),
-                onChanged: (value) {
-                  newTitle = value;
-                },
-                decoration: InputDecoration(
-                  hintText: 'Title',
+      // isNew ? 'Add New Entry' : args.title
+      body: CustomScrollView(
+          slivers: [
+      SliverAppBar(
+      actions: [Image.asset("lib/Logo.png")],
+        foregroundColor: Colors.pinkAccent.shade100,
+        forceElevated: true,
+        pinned: true,
+        title: Center(
+          child: RichText(
+            text: TextSpan(
+              text: (isNew ? 'Add New Entry' : args.title),
+              style: DefaultTextStyle.of(context).style.copyWith(color: Colors.pinkAccent, decoration: TextDecoration.none),
+            ),
+          ),
+        )),
+    SliverToBoxAdapter(
+      child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: TextEditingController(text: newTitle),
+                  onChanged: (value) {
+                    newTitle = value;
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Title',
+                  ),
                 ),
               ),
-            ),
-            ChipSelection(
-                currentTag: tag,
-                onSelected: (selectedTag) => tag = selectedTag,
-                addUnassigned: false),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: TextEditingController(text: newDescription),
-                minLines: 5,
-                maxLines: 20,
-                onChanged: (value) {
-                  newDescription = value;
-                },
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Description',
+              ChipSelection(
+                  currentTag: tag,
+                  onSelected: (selectedTag) => tag = selectedTag,
+                  addUnassigned: false),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: TextEditingController(text: newDescription),
+                  minLines: 5,
+                  maxLines: 20,
+                  onChanged: (value) {
+                    newDescription = value;
+                  },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Description',
+                  ),
                 ),
               ),
-            ),
-            if (args.images.isNotEmpty && args.images.length == 1)
-              SizedBox(
+              if (args.images.isNotEmpty && args.images.length == 1)
+                SizedBox(
+                    height: 200,
+                    child: EntryImage(
+                        image: args.images[0],
+                        onDelete: () => {
+                          setState(() {
+                            args.images.removeAt(0);
+                          }),
+                          Provider.of<MyAppState>(context,
+                              listen: false)
+                              .saveEntries()
+                        },
+                        confirmDialog: _showConfirmDialog)
+                ),
+              if (args.images.isNotEmpty && args.images.length != 1)
+                SizedBox(
                   height: 200,
-                  child: EntryImage(
-                      image: args.images[0],
-                      onDelete: () => {
-                        setState(() {
-                          args.images.removeAt(0);
-                        }),
-                        Provider.of<MyAppState>(context,
-                            listen: false)
-                            .saveEntries()
-                      },
-                      confirmDialog: _showConfirmDialog)
-              ),
-            if (args.images.isNotEmpty && args.images.length != 1)
-              SizedBox(
-                height: 200,
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: images.length,
-                  itemBuilder: (BuildContext context, int index) => Card(
-                      child: EntryImage(
-                          image: images[index],
-                          onDelete: () => {
-                                setState(() {
-                                  images.removeAt(index);
-                                })
-                              },
-                          confirmDialog: _showConfirmDialog)),
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: images.length,
+                    itemBuilder: (BuildContext context, int index) => Card(
+                        child: EntryImage(
+                            image: images[index],
+                            onDelete: () => {
+                                  setState(() {
+                                    images.removeAt(index);
+                                  })
+                                },
+                            confirmDialog: _showConfirmDialog)),
+                  ),
                 ),
-              ),
-          ],
-        ),
+            ],
+          ),
+    ),]
       ),
       persistentFooterButtons: <Widget>[
         if (!isNew)

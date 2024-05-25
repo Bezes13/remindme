@@ -68,14 +68,28 @@ class _EntryListScreenState extends State<_EntryListScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = theme.textTheme.displayLarge!;
-    final itemStyle = theme.textTheme.displayMedium!;
+    final itemStyle = theme.textTheme.displayMedium!.copyWith(color: CupertinoColors.activeBlue);
     var appState = Provider.of<MyAppState>(context);
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(floating: true, title: Text("Remy", style: style,)),
+          SliverAppBar(
+              leading: Image.asset("lib/Logo.png"),
+              foregroundColor: Colors.pinkAccent.shade100,
+              forceElevated: true,
+              pinned: true,
+              title: Center(
+            child: RichText(
+                    text: TextSpan(
+            text: 'Re',
+            style: DefaultTextStyle.of(context).style.copyWith(color: Colors.pinkAccent, decoration: TextDecoration.none),
+            children: const <TextSpan>[
+              TextSpan(text: 'My', style: TextStyle(fontWeight: FontWeight.bold, color: CupertinoColors.activeBlue)),
+            ],
+                    ),
+                  ),
+          )),
           SliverToBoxAdapter(
             child: Column(
               children: [
