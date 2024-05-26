@@ -6,6 +6,7 @@ import 'package:remindme/ChipSelection.dart';
 import 'package:remindme/EntryImage.dart';
 import 'package:remindme/entry.dart';
 import 'package:remindme/my_app_state.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'ConfirmDialog.dart';
 
@@ -62,6 +63,14 @@ class _CreationPageState extends State<CreationPage> {
               }
             },
           ),
+          CupertinoActionSheetAction(
+            child: Text('Cancel'),
+            onPressed: () async {
+              // close the options modal
+              Navigator.of(context).pop();
+              // get image from gallery
+            },
+          )
         ],
       ),
     );
@@ -81,23 +90,29 @@ class _CreationPageState extends State<CreationPage> {
 
     return Scaffold(
       // isNew ? 'Add New Entry' : args.title
-      body: CustomScrollView(
-          slivers: [
-      SliverAppBar(
-      actions: [Image.asset("lib/Logo.png")],
-        foregroundColor: Colors.pinkAccent.shade100,
-        forceElevated: true,
-        pinned: true,
-        title: Center(
-          child: RichText(
-            text: TextSpan(
-              text: (isNew ? 'Add New Entry' : args.title),
-              style: DefaultTextStyle.of(context).style.copyWith(color: Colors.pinkAccent, decoration: TextDecoration.none),
+      body: CustomScrollView(slivers: [
+        SliverAppBar(
+          actions: [
+            SvgPicture.asset(
+              'lib/Logo.svg',
+              semanticsLabel: 'My SVG Image',
+              height: 100,
+              width: 70,
+            )
+          ],
+          foregroundColor: Colors.pinkAccent.shade100,
+          forceElevated: true,
+          pinned: true,
+          title: Center(
+            child: Text(
+              (isNew ? 'Add New Entry' : args.title),
+              style: DefaultTextStyle.of(context).style.copyWith(
+                  color: Colors.pinkAccent, decoration: TextDecoration.none, fontSize: 20 ),
             ),
           ),
-        )),
-    SliverToBoxAdapter(
-      child: Column(
+        ),
+        SliverToBoxAdapter(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Padding(
@@ -137,15 +152,13 @@ class _CreationPageState extends State<CreationPage> {
                     child: EntryImage(
                         image: args.images[0],
                         onDelete: () => {
-                          setState(() {
-                            args.images.removeAt(0);
-                          }),
-                          Provider.of<MyAppState>(context,
-                              listen: false)
-                              .saveEntries()
-                        },
-                        confirmDialog: _showConfirmDialog)
-                ),
+                              setState(() {
+                                args.images.removeAt(0);
+                              }),
+                              Provider.of<MyAppState>(context, listen: false)
+                                  .saveEntries()
+                            },
+                        confirmDialog: _showConfirmDialog)),
               if (args.images.isNotEmpty && args.images.length != 1)
                 SizedBox(
                   height: 200,
@@ -167,32 +180,40 @@ class _CreationPageState extends State<CreationPage> {
                 ),
             ],
           ),
-    ),]
-      ),
+        ),
+      ]),
       persistentFooterButtons: <Widget>[
+        IconButton(
+          onPressed: () {
+            Navigator.pushNamed(context, "/");
+          },
+          icon: Icon(Icons.home_filled),
+        ),
         if (!isNew)
-
-
           IconButton(
             onPressed: () async {
-              _showConfirmDialog(args.title, Card(
-                child: ListTile(
-                  title: Text(
-                    args.title,
-                    style: itemStyle,
+              _showConfirmDialog(
+                  args.title,
+                  Card(
+                    child: ListTile(
+                      title: Text(
+                        args.title,
+                        style: itemStyle,
+                      ),
+                      subtitle: Text(
+                        args.description,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ),
-                  subtitle: Text(
-                    args.description,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ), ()=>{
-              appState.deleteEntry(args),
-              Navigator.pushNamed(context, "/")
-              });
+                  () => {
+                        appState.deleteEntry(args),
+                        Navigator.pushNamed(context, "/")
+                      });
             },
             icon: Icon(Icons.delete),
           ),
+
         IconButton(
           onPressed: () {
             showOptionsOnCreate((p0) => setState(() {
@@ -204,7 +225,8 @@ class _CreationPageState extends State<CreationPage> {
       ],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, "/another", arguments: Entry("", "", [], ""));
+          Navigator.pushNamed(context, "/another",
+              arguments: Entry("", "", [], ""));
         },
         tooltip: 'Add Entry',
         child: Icon(Icons.check),

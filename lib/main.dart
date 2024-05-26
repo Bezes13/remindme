@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:remindme/ChipSelection.dart';
 import 'package:remindme/creation_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'entry.dart';
 import 'my_app_state.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
+          debugShowCheckedModeBanner: false,
           title: 'Remind Me',
           theme: ThemeData(
             useMaterial3: true,
@@ -75,7 +77,12 @@ class _EntryListScreenState extends State<_EntryListScreen> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-              leading: Image.asset("lib/Logo.png"),
+              leading: SvgPicture.asset(
+                'lib/Logo.svg',
+                semanticsLabel: 'My SVG Image',
+                height: 100,
+                width: 70,
+              ),
               foregroundColor: Colors.pinkAccent.shade100,
               forceElevated: true,
               pinned: true,
