@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:remindme/ChipSelection.dart';
 import 'package:remindme/creation_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:remindme/my_theme.dart';
 
 import 'entry.dart';
 import 'my_app_state.dart';
@@ -43,9 +44,9 @@ class _MyAppState extends State<MyApp> {
         darkTheme: ThemeData.dark().copyWith(
           floatingActionButtonTheme: FloatingActionButtonThemeData(
             backgroundColor: Colors.pinkAccent,
-          ),
+          ), //inputDecorationTheme: MyTheme().theme()
         ),
-        theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: Colors.pinkAccent),),
+        theme: ThemeData(useMaterial3: true, colorScheme: ColorScheme.fromSeed(seedColor: Colors.pinkAccent), inputDecorationTheme: MyTheme().theme()),
         themeMode: _themeMode,
         routes: {
           '/': (context) => MyHomePage(),
@@ -85,11 +86,12 @@ class _EntryListScreenState extends State<_EntryListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<MyAppState>(context, listen: false).loadEntries();
     });
-    isDarkMode = Theme.of(context).colorScheme.brightness == Brightness.dark;
+
   }
 
   @override
   Widget build(BuildContext context) {
+    isDarkMode = Theme.of(context).colorScheme.brightness == Brightness.dark;
     final theme = Theme.of(context);
     final itemStyle = theme.textTheme.displayMedium!;
     var appState = Provider.of<MyAppState>(context);
@@ -215,7 +217,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, "/another",
-              arguments: Entry("", "", [], ""));
+              arguments: Entry("", "", [], "", 0));
         },
         tooltip: 'Add Entry',
         child: Icon(Icons.add),

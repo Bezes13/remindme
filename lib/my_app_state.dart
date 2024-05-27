@@ -45,14 +45,14 @@ class MyAppState extends ChangeNotifier {
   }
 
   void addNewEntry(String? oldTitle, String? newTitle, String? newDescription,
-      List<String> images, String tag) {
+      List<String> images, String tag, int rating) {
     if (newTitle != null) {
       if (oldTitle != null) {
         entries.removeWhere((element) => oldTitle == element.title);
       }
 
-      entries.add(Entry(newTitle, newDescription ?? "", images, tag));
-      entries.sort((a, b) => a.title.compareTo(b.title));
+      entries.add(Entry(newTitle, newDescription ?? "", images, tag, rating));
+      entries.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
       filterWithTag();
       saveEntries();
       notifyListeners();
@@ -63,7 +63,7 @@ class MyAppState extends ChangeNotifier {
     entries = entries.map((entry) {
       if (entry.title == title) {
         entry.images.add(imagePath);
-        return Entry(entry.title, entry.description, entry.images, entry.tag);
+        return Entry(entry.title, entry.description, entry.images, entry.tag, entry.rating);
       } else {
         return entry;
       }
@@ -77,7 +77,7 @@ class MyAppState extends ChangeNotifier {
   void addTag(String tag, String title){
     entries = entries.map((entry) {
       if (entry.title == title) {
-        return Entry(entry.title, entry.description, entry.images, tag);
+        return Entry(entry.title, entry.description, entry.images, tag, entry.rating);
       } else {
         return entry;
       }
@@ -121,7 +121,7 @@ class MyAppState extends ChangeNotifier {
     allTags.remove(tag);
     entries.map((entry) {
       if (entry.tag == tag) {
-        return Entry(entry.title, entry.description, entry.images, "");
+        return Entry(entry.title, entry.description, entry.images, "", entry.rating);
       } else {
         return entry;
       }

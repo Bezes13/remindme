@@ -19,7 +19,7 @@ class CreationPage extends StatefulWidget {
 
 class _CreationPageState extends State<CreationPage> {
   final picker = ImagePicker();
-
+  double rating = 0;
   void _showConfirmDialog(
       String title, Widget content, Function confirmAction) {
     showDialog(
@@ -85,6 +85,7 @@ class _CreationPageState extends State<CreationPage> {
     List<String> images = args.images;
     String tag = args.tag;
     bool isNew = args.title == "";
+
     final theme = Theme.of(context);
     final itemStyle = theme.textTheme.displayMedium!;
 
@@ -117,32 +118,82 @@ class _CreationPageState extends State<CreationPage> {
             children: <Widget>[
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TextField(
+                child: TextFormField(
                   controller: TextEditingController(text: newTitle),
                   onChanged: (value) {
                     newTitle = value;
                   },
                   decoration: InputDecoration(
-                    hintText: 'Title',
+                      contentPadding: EdgeInsets.all(16),
+                      isDense: true,
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+                      labelText: "Title"
                   ),
                 ),
               ),
+              /*Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Rating: "),
+                  RatingStars(
+                    axis: Axis.horizontal,
+                    value: rating,
+                    onValueChanged: (v) {
+                      setState(() {
+                        rating = v;
+                      });
+                    },
+                    starCount: 5,
+                    starSize: 20,
+                    valueLabelColor: const Color(0xff9b9b9b),
+                    valueLabelTextStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w400,
+                        fontStyle: FontStyle.normal,
+                        fontSize: 12.0),
+                    valueLabelRadius: 5,
+                    maxValue: 5,
+                    starSpacing: 2,
+                    maxValueVisibility: false,
+                    valueLabelVisibility: false,
+                    animationDuration: Duration(milliseconds: 1000),
+                    //valueLabelPadding:
+                    //const EdgeInsets.symmetric(vertical: 1, horizontal: 8),
+                    //valueLabelMargin: const EdgeInsets.only(right: 8),
+                    starOffColor: const Color(0xffe7e8ea),
+                    starColor: Colors.yellow,
+                    angle: 12,
+                  ),
+                ],
+              ),*/
               ChipSelection(
                   currentTag: tag,
                   onSelected: (selectedTag) => tag = selectedTag,
                   addUnassigned: false),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TextField(
+                child: TextFormField(
                   controller: TextEditingController(text: newDescription),
-                  minLines: 5,
-                  maxLines: 20,
+                  maxLines: 10,
                   onChanged: (value) {
                     newDescription = value;
                   },
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Description',
+                    contentPadding: EdgeInsets.all(16),
+                    isDense: true,
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+                    label:  Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.description_outlined),
+                          Padding(
+                            padding: const EdgeInsets.only(left:8.0),
+                            child: Text("Description"),
+                          )
+                        ],
+                      )
                   ),
                 ),
               ),
@@ -225,8 +276,8 @@ class _CreationPageState extends State<CreationPage> {
       ],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, "/another",
-              arguments: Entry("", "", [], ""));
+          appState.addNewEntry(args.title, newTitle, newDescription, images, tag, rating.toInt());
+          Navigator.pushNamed(context, "/");
         },
         tooltip: 'Add Entry',
         child: Icon(Icons.check),
