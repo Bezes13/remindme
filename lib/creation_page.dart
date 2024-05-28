@@ -95,6 +95,7 @@ class _CreationPageState extends State<CreationPage> {
       // isNew ? 'Add New Entry' : args.title
       body: CustomScrollView(slivers: [
         SliverAppBar(
+          shadowColor: Colors.grey,
           actions: [
             Tooltip(
               message: 'Change brightness mode',
@@ -128,124 +129,127 @@ class _CreationPageState extends State<CreationPage> {
           ),
         ),
         SliverToBoxAdapter(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  controller: TextEditingController(text: newTitle),
-                  onChanged: (value) {
-                    newTitle = value;
-                  },
-                  decoration: InputDecoration(
+          child: Padding(
+            padding: const EdgeInsets.only(top:8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    controller: TextEditingController(text: newTitle),
+                    onChanged: (value) {
+                      newTitle = value;
+                    },
+                    decoration: InputDecoration(
+                        contentPadding: EdgeInsets.all(16),
+                        isDense: true,
+                        floatingLabelBehavior: FloatingLabelBehavior.always,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+                        labelText: "Title"
+                    ),
+                  ),
+                ),
+                /*Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("Rating: "),
+                    RatingStars(
+                      axis: Axis.horizontal,
+                      value: rating,
+                      onValueChanged: (v) {
+                        setState(() {
+                          rating = v;
+                        });
+                      },
+                      starCount: 5,
+                      starSize: 20,
+                      valueLabelColor: const Color(0xff9b9b9b),
+                      valueLabelTextStyle: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w400,
+                          fontStyle: FontStyle.normal,
+                          fontSize: 12.0),
+                      valueLabelRadius: 5,
+                      maxValue: 5,
+                      starSpacing: 2,
+                      maxValueVisibility: false,
+                      valueLabelVisibility: false,
+                      animationDuration: Duration(milliseconds: 1000),
+                      //valueLabelPadding:
+                      //const EdgeInsets.symmetric(vertical: 1, horizontal: 8),
+                      //valueLabelMargin: const EdgeInsets.only(right: 8),
+                      starOffColor: const Color(0xffe7e8ea),
+                      starColor: Colors.yellow,
+                      angle: 12,
+                    ),
+                  ],
+                ),*/
+                ChipSelection(
+                    currentTag: tag,
+                    onSelected: (selectedTag) => tag = selectedTag,
+                    addUnassigned: false),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    controller: TextEditingController(text: newDescription),
+                    maxLines: 10,
+                    onChanged: (value) {
+                      newDescription = value;
+                    },
+                    decoration: InputDecoration(
                       contentPadding: EdgeInsets.all(16),
                       isDense: true,
                       floatingLabelBehavior: FloatingLabelBehavior.always,
                       border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
-                      labelText: "Title"
+                      label:  Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.description_outlined),
+                            Padding(
+                              padding: const EdgeInsets.only(left:8.0),
+                              child: Text("Description"),
+                            )
+                          ],
+                        )
+                    ),
                   ),
                 ),
-              ),
-              /*Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Rating: "),
-                  RatingStars(
-                    axis: Axis.horizontal,
-                    value: rating,
-                    onValueChanged: (v) {
-                      setState(() {
-                        rating = v;
-                      });
-                    },
-                    starCount: 5,
-                    starSize: 20,
-                    valueLabelColor: const Color(0xff9b9b9b),
-                    valueLabelTextStyle: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w400,
-                        fontStyle: FontStyle.normal,
-                        fontSize: 12.0),
-                    valueLabelRadius: 5,
-                    maxValue: 5,
-                    starSpacing: 2,
-                    maxValueVisibility: false,
-                    valueLabelVisibility: false,
-                    animationDuration: Duration(milliseconds: 1000),
-                    //valueLabelPadding:
-                    //const EdgeInsets.symmetric(vertical: 1, horizontal: 8),
-                    //valueLabelMargin: const EdgeInsets.only(right: 8),
-                    starOffColor: const Color(0xffe7e8ea),
-                    starColor: Colors.yellow,
-                    angle: 12,
-                  ),
-                ],
-              ),*/
-              ChipSelection(
-                  currentTag: tag,
-                  onSelected: (selectedTag) => tag = selectedTag,
-                  addUnassigned: false),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  controller: TextEditingController(text: newDescription),
-                  maxLines: 10,
-                  onChanged: (value) {
-                    newDescription = value;
-                  },
-                  decoration: InputDecoration(
-                    contentPadding: EdgeInsets.all(16),
-                    isDense: true,
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
-                    label:  Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.description_outlined),
-                          Padding(
-                            padding: const EdgeInsets.only(left:8.0),
-                            child: Text("Description"),
-                          )
-                        ],
-                      )
-                  ),
-                ),
-              ),
-              Divider(),
-              if (args.images.isNotEmpty && args.images.length == 1)
-                SizedBox(
+                Divider(),
+                if (args.images.isNotEmpty && args.images.length == 1)
+                  SizedBox(
+                      height: 200,
+                      child: EntryImage(
+                          image: args.images[0],
+                          onDelete: () => {
+                                setState(() {
+                                  args.images.removeAt(0);
+                                }),
+                                Provider.of<MyAppState>(context, listen: false)
+                                    .saveEntries()
+                              },
+                          confirmDialog: _showConfirmDialog)),
+                if (args.images.isNotEmpty && args.images.length != 1)
+                  SizedBox(
                     height: 200,
-                    child: EntryImage(
-                        image: args.images[0],
-                        onDelete: () => {
-                              setState(() {
-                                args.images.removeAt(0);
-                              }),
-                              Provider.of<MyAppState>(context, listen: false)
-                                  .saveEntries()
-                            },
-                        confirmDialog: _showConfirmDialog)),
-              if (args.images.isNotEmpty && args.images.length != 1)
-                SizedBox(
-                  height: 200,
-                  width: double.maxFinite,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    itemCount: images.length,
-                    itemBuilder: (BuildContext context, int index) => Card(
-                        child: EntryImage(
-                            image: images[index],
-                            onDelete: () => {
-                                  setState(() {
-                                    images.removeAt(index);
-                                  })
-                                },
-                            confirmDialog: _showConfirmDialog)),
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: images.length,
+                      itemBuilder: (BuildContext context, int index) => Card(
+                          child: EntryImage(
+                              image: images[index],
+                              onDelete: () => {
+                                    setState(() {
+                                      images.removeAt(index);
+                                    })
+                                  },
+                              confirmDialog: _showConfirmDialog)),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ]),

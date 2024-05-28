@@ -107,6 +107,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 width: 70,
                 color: Colors.pinkAccent,
               ),
+              shadowColor: Colors.grey,
               actions: [
                 Tooltip(
                   message: 'Change brightness mode',
@@ -190,6 +191,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 return Card(
+                  shadowColor: Colors.grey,
                   child: ListTile(
                     title: Text(
                       appState.filteredEntries[index].title,
