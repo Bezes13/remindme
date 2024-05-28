@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 class EntryImage extends StatelessWidget {
   const EntryImage(
       {super.key,
-        required this.image,
-        required this.onDelete,
-        required this.confirmDialog});
+      required this.image,
+      required this.onDelete,
+      required this.confirmDialog});
 
   final String image;
   final Function onDelete;
@@ -18,7 +18,10 @@ class EntryImage extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Image.file(File(image)),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16.0),
+          child: Image.file(File(image)),
+        ),
         Positioned(
           top: -10,
           right: -10,

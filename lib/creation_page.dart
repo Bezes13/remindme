@@ -6,9 +6,9 @@ import 'package:remindme/ChipSelection.dart';
 import 'package:remindme/EntryImage.dart';
 import 'package:remindme/entry.dart';
 import 'package:remindme/my_app_state.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import 'ConfirmDialog.dart';
+import 'main.dart';
 
 class CreationPage extends StatefulWidget {
   const CreationPage({super.key});
@@ -19,6 +19,7 @@ class CreationPage extends StatefulWidget {
 
 class _CreationPageState extends State<CreationPage> {
   final picker = ImagePicker();
+  bool isDarkMode = false;
   double rating = 0;
   void _showConfirmDialog(
       String title, Widget content, Function confirmAction) {
@@ -78,6 +79,7 @@ class _CreationPageState extends State<CreationPage> {
 
   @override
   Widget build(BuildContext context) {
+    isDarkMode = Theme.of(context).colorScheme.brightness == Brightness.dark;
     var appState = Provider.of<MyAppState>(context);
     final args = ModalRoute.of(context)!.settings.arguments as Entry;
     String newTitle = args.title;
@@ -94,11 +96,24 @@ class _CreationPageState extends State<CreationPage> {
       body: CustomScrollView(slivers: [
         SliverAppBar(
           actions: [
-            SvgPicture.asset(
-              'lib/Logo.svg',
-              semanticsLabel: 'My SVG Image',
-              height: 100,
-              width: 70,
+            Tooltip(
+              message: 'Change brightness mode',
+              child: IconButton(
+                isSelected: !isDarkMode,
+                onPressed: () {
+                  setState(() {
+                    isDarkMode = !isDarkMode;
+                    if (isDarkMode) {
+                      MyApp.of(context).changeTheme(ThemeMode.dark);
+                    } else {
+                      MyApp.of(context).changeTheme(ThemeMode.light);
+                    }
+                  });
+                },
+                icon: const Icon(Icons.wb_sunny_outlined),
+                selectedIcon:
+                const Icon(Icons.brightness_2_outlined),
+              ),
             )
           ],
           foregroundColor: Colors.pinkAccent.shade100,
@@ -197,6 +212,7 @@ class _CreationPageState extends State<CreationPage> {
                   ),
                 ),
               ),
+              Divider(),
               if (args.images.isNotEmpty && args.images.length == 1)
                 SizedBox(
                     height: 200,

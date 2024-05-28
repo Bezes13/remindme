@@ -107,6 +107,27 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                 width: 70,
                 color: Colors.pinkAccent,
               ),
+              actions: [
+                Tooltip(
+                  message: 'Change brightness mode',
+                  child: IconButton(
+                    isSelected: !isDarkMode,
+                    onPressed: () {
+                      setState(() {
+                        isDarkMode = !isDarkMode;
+                        if (isDarkMode) {
+                          MyApp.of(context).changeTheme(ThemeMode.dark);
+                        } else {
+                          MyApp.of(context).changeTheme(ThemeMode.light);
+                        }
+                      });
+                    },
+                    icon: const Icon(Icons.wb_sunny_outlined),
+                    selectedIcon:
+                    const Icon(Icons.brightness_2_outlined),
+                  ),
+                )
+              ],
               forceElevated: true,
               pinned: true,
               title: Center(
@@ -142,27 +163,6 @@ class _EntryListScreenState extends State<_EntryListScreen> {
                           appState.filter(filter);
                         },
                         leading: const Icon(Icons.search),
-                        trailing: <Widget>[
-                          Tooltip(
-                            message: 'Change brightness mode',
-                            child: IconButton(
-                              isSelected: isDarkMode,
-                              onPressed: () {
-                                setState(() {
-                                  isDarkMode = !isDarkMode;
-                                  if (isDarkMode) {
-                                    MyApp.of(context).changeTheme(ThemeMode.dark);
-                                  } else {
-                                    MyApp.of(context).changeTheme(ThemeMode.light);
-                                  }
-                                });
-                              },
-                              icon: const Icon(Icons.wb_sunny_outlined),
-                              selectedIcon:
-                                  const Icon(Icons.brightness_2_outlined),
-                            ),
-                          )
-                        ],
                       );
                     }, suggestionsBuilder:
                         (BuildContext context, SearchController controller) {
@@ -217,7 +217,7 @@ class _EntryListScreenState extends State<_EntryListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(context, "/another",
-              arguments: Entry("", "", [], "", 0));
+              arguments: Entry("", "", [], ""));
         },
         tooltip: 'Add Entry',
         child: Icon(Icons.add),
