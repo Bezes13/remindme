@@ -29,12 +29,12 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "lib/Logo.png"
+  image_path: "lib/images/Logo.png"
 
 flutter_icons:
   android: true
   ios: true
-  image_path: "lib/Logo.png"
+  image_path: "lib/images/Logo.png"
 
 
   flutter_lints: ^2.0.0
@@ -42,5 +42,5 @@ flutter_icons:
 flutter:
   uses-material-design: true
   assets:
-    - lib/
-    - lib/Logo.svg
+    - lib/images/download.svg
+    - lib/images/Logo.svg

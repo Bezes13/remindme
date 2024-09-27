@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'entry.dart';
+import 'models/entry.dart';
 
 class MyAppState extends ChangeNotifier {
   List<Entry> entries = [];

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'my_app_state.dart';
+import '../my_app_state.dart';
 
 class ChipSelection extends StatefulWidget {
   const ChipSelection(
@@ -32,7 +32,7 @@ class _ChipSelectionState extends State<ChipSelection> {
     var appState = Provider.of<MyAppState>(context);
     if (selectedTag == "") {
       return Wrap(
-        spacing: 3.0,
+        spacing: 4.0,
         children: appState.allTags
             .map((String tag) {
               return FilterChip(

@@ -2,22 +2,22 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:remindme/ChipSelection.dart';
-import 'package:remindme/EntryImage.dart';
-import 'package:remindme/entry.dart';
+import 'package:remindme/components/ChipSelection.dart';
+import 'package:remindme/components/EntryImage.dart';
+import 'package:remindme/models/entry.dart';
 import 'package:remindme/my_app_state.dart';
 
-import 'ConfirmDialog.dart';
-import 'main.dart';
+import '../components/ConfirmDialog.dart';
+import '../my_app.dart';
 
-class CreationPage extends StatefulWidget {
-  const CreationPage({super.key});
+class CreationScreen extends StatefulWidget {
+  const CreationScreen({super.key});
 
   @override
-  State<CreationPage> createState() => _CreationPageState();
+  State<CreationScreen> createState() => _CreationScreenState();
 }
 
-class _CreationPageState extends State<CreationPage> {
+class _CreationScreenState extends State<CreationScreen> {
   final picker = ImagePicker();
   bool isDarkMode = false;
   double rating = 0;
